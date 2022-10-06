@@ -110,7 +110,7 @@ tvh_codec_profile_v4l2m2m_open(tvh_codec_profile_v4l2m2m_t *self, AVDictionary *
     return 0;
 }
 
-static htsmsg_t *
+/* static htsmsg_t *
 codec_profile_v4l2m2m_class_level_list_h264(void *obj, const char *lang)
 {
     static const struct strtab tab[] = {
@@ -136,7 +136,7 @@ codec_profile_v4l2m2m_class_level_list_h264(void *obj, const char *lang)
         {N_("6.2"),           V4L2_ENC_LEVEL_H264_62},
     };
     return strtab2htsmsg(tab, 1, lang);
-}
+} */
 
 static const codec_profile_class_t codec_profile_v4l2m2m_class = {
     {
