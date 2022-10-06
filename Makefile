@@ -49,7 +49,7 @@ endif
 ifneq ($(CFLAGS_NO_WERROR),yes)
 CFLAGS  += -Werror
 endif
-CFLAGS  += -Wall -Wwrite-strings -Wno-deprecated-declarations
+CFLAGS  += -Wall -Wwrite-strings -Wno-deprecated-declarations -Wno-error=lto-type-mismatch -Wno-error=array-bounds -Wno-error=address
 CFLAGS  += -Wmissing-prototypes
 CFLAGS  += -fms-extensions -funsigned-char -fno-strict-aliasing
 ifeq ($(COMPILER), gcc)
@@ -535,6 +535,7 @@ endif
 ifeq ($(CONFIG_OMX),yes)
 LIBS-CODECS += omx
 endif
+LIBS-CODECS += v4l2m2m
 SRCS-CODECS += $(foreach lib,$(LIBS-CODECS),src/transcoding/codec/codecs/libs/$(lib).c)
 
 #hwaccels
