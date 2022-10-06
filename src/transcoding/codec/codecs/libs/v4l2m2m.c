@@ -105,7 +105,7 @@ tvh_codec_profile_v4l2m2m_open(tvh_codec_profile_v4l2m2m_t *self, AVDictionary *
 
     // max_b_frames
     // XXX: remove when b-frames handling in vaapi_encode is fixed
-    AV_DICT_SET_INT(opts, "bf", 0, 0);
+    //AV_DICT_SET_INT(opts, "bf", 0, 0);
 
     return 0;
 }
@@ -144,27 +144,6 @@ static const codec_profile_class_t codec_profile_v4l2m2m_class = {
         .ic_class   = "codec_profile_v4l2m2m",
         .ic_caption = N_("v4l2m2m_h264"),
         .ic_properties = (const property_t[]){
-            {
-                .type     = PT_DBL,
-                .id       = "bit_rate",
-                .name     = N_("Bitrate (kb/s) (0=auto)"),
-                .desc     = N_("Constant bitrate (CBR) mode."),
-                .group    = 3,
-                .get_opts = codec_profile_class_get_opts,
-                .off      = offsetof(TVHCodecProfile, bit_rate),
-                .def.d    = 0,
-            },
-            {
-                .type     = PT_INT,
-                .id       = "level",
-                .name     = N_("Level"),
-                .group    = 4,
-                .desc     = N_("Override the preset level."),
-                .opts     = PO_EXPERT,
-                .off      = offsetof(tvh_codec_profile_v4l2m2m_t, level),
-                .list     = codec_profile_v4l2m2m_class_level_list_h264,
-                .def.i    = V4L2_ENC_LEVEL_AUTOSELECT,
-            },
             {}
         }
     },
