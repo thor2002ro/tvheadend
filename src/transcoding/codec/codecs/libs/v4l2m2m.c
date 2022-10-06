@@ -105,8 +105,8 @@ tvh_codec_profile_v4l2m2m_open(tvh_codec_profile_v4l2m2m_t *self, AVDictionary *
 
     // max_b_frames
     // XXX: remove when b-frames handling in vaapi_encode is fixed
-    //AV_DICT_SET_INT(opts, "bf", 0, 0);
-
+    AV_DICT_SET_INT(opts, "bf", 0, 0);
+    AV_DICT_SET_INT(opts, "num_capture_buffers", 128, 0);
     return 0;
 }
 
