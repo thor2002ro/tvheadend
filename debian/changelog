@@ -1,6 +1,6 @@
-tvheadend (4.3.0~pre+202210032212-0~built202210040132~git8f8877430~ubuntu22.10.1) kinetic; urgency=low
+tvheadend (4.3.0~pre+202210071924-0~built202210081933~git5f9404117~ubuntu22.10.1) kinetic; urgency=low
 
   * Auto build.
 
- -- Michael Marley <michael@michaelmarley.com>  Tue, 04 Oct 2022 01:32:10 +0000
+ -- Michael Marley <michael@michaelmarley.com>  Sat, 08 Oct 2022 19:33:10 +0000
 
