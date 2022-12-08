@@ -955,27 +955,24 @@ profile_sharer_destroy(profile_chain_t *prch)
 {
   profile_sharer_t *prsh = prch->prch_sharer;
   profile_sharer_message_t *psm, *psm2;
-  int run = 0;
 
   if (prsh == NULL)
     return;
-  tvh_mutex_lock(&prsh->prsh_queue_mutex);
   LIST_REMOVE(prch, prch_sharer_link);
   if (LIST_EMPTY(&prsh->prsh_chains)) {
-    if ((run = prsh->prsh_queue_run) != 0) {
+    if (prsh->prsh_queue_run) {
+      tvh_mutex_lock(&prsh->prsh_queue_mutex);
       prsh->prsh_queue_run = 0;
       tvh_cond_signal(&prsh->prsh_queue_cond, 0);
-    }
-    prch->prch_sharer = NULL;
-    prch->prch_post_share = NULL;
-  }
-  tvh_mutex_unlock(&prsh->prsh_queue_mutex);
-  if (run) {
-    pthread_join(prsh->prsh_queue_thread, NULL);
-    while ((psm = TAILQ_FIRST(&prsh->prsh_queue)) != NULL) {
-      streaming_msg_free(psm->psm_sm);
-      TAILQ_REMOVE(&prsh->prsh_queue, psm, psm_link);
-      free(psm);
+	    prch->prch_sharer = NULL;
+      prch->prch_post_share = NULL;
+      tvh_mutex_unlock(&prsh->prsh_queue_mutex);
+      pthread_join(prsh->prsh_queue_thread, NULL);
+      while ((psm = TAILQ_FIRST(&prsh->prsh_queue)) != NULL) {
+        streaming_msg_free(psm->psm_sm);
+        TAILQ_REMOVE(&prsh->prsh_queue, psm, psm_link);
+        free(psm);
+      }
     }
     if (prsh->prsh_tsfix)
       tsfix_destroy(prsh->prsh_tsfix);
@@ -1012,7 +1009,7 @@ profile_sharer_destroy(profile_chain_t *prch)
       if (prsh->prsh_master == prch)
         prsh->prsh_master = NULL;
       tvh_mutex_unlock(&prsh->prsh_queue_mutex);
-    }
+	  } 
   }
 }
 
@@ -1932,6 +1929,7 @@ profile_class_mc_audio_list ( void *o, const char *lang )
     { N_("AAC audio"),                    MC_AAC },
     { N_("MP4 audio"),                    MC_MP4A },
     { N_("Vorbis audio"),                 MC_VORBIS },
+    { N_("AC-4 audio"),                   MC_AC4, },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -2393,6 +2391,7 @@ static const struct strtab_str profile_class_src_acodec_tab[] = {
   { "EAC3",                  "EAC3" },
   { "VORBIS",                "VORBIS" },
   { "OPUS",                  "OPUS" },
+  { "AC-4",                  "AC-4" },
 };
 
 static int
@@ -2637,6 +2636,7 @@ profile_transcode_mc_valid(int mc)
   case MC_MPEGPS:
   case MC_MPEG2AUDIO:
   case MC_AC3:
+  case MC_AC4:
   case MC_AAC:
   case MC_VORBIS:
   case MC_AVMATROSKA:
