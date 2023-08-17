@@ -24,6 +24,10 @@
 #include <fcntl.h>
 #include <signal.h>
 
+#if LIBAVCODEC_VERSION_MAJOR > 58
+#include <libavcodec/avcodec.h>
+#endif
+
 #define WRITE_BUFFER_SIZE (188*500)
 
 typedef struct {
@@ -87,6 +91,8 @@ iptv_libav_thread(void *aux)
   iptv_libav_priv_t *la = aux;
   AVStream *in_stream, *out_stream;
   AVPacket pkt;
+  AVCodecContext *c;
+  const AVCodec *codec;
   uint8_t *buf = NULL;
   int ret, i;
 
@@ -115,19 +121,24 @@ iptv_libav_thread(void *aux)
 
   for (i = 0; i < la->ictx->nb_streams; i++) {
     in_stream = la->ictx->streams[i];
-    out_stream = avformat_new_stream(la->octx, in_stream->codec->codec);
+    codec = avcodec_find_encoder(in_stream->codecpar->codec_id);
+    c = avcodec_alloc_context3(codec);
+    out_stream = avformat_new_stream(la->octx, codec);
     if (out_stream == NULL) {
       tvherror(LS_IPTV, "libav: Failed allocating output stream");
+      avcodec_free_context(&c);
       goto fail;
     }
     ret = avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
     if (ret < 0) {
       tvherror(LS_IPTV, "libav: Failed to copy context from input to output stream codec context: %s", av_err2str(ret));
+      avcodec_free_context(&c);
       goto fail;
     }
-    out_stream->codec->codec_tag = 0;
+    out_stream->codecpar->codec_tag = 0;
     if (la->octx->oformat->flags & AVFMT_GLOBALHEADER)
-      out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+      c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+    avcodec_free_context(&c);
   }
 
   ret = avformat_write_header(la->octx, NULL);

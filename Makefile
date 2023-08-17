@@ -51,8 +51,10 @@ CFLAGS  += -Werror
 endif
 CFLAGS  += -Wall -Wwrite-strings -Wno-deprecated-declarations -Wno-error=lto-type-mismatch -Wno-error=array-bounds -Wno-error=address
 CFLAGS  += -Wmissing-prototypes
+CFLAGS  += -fno-strict-aliasing
 CFLAGS  += -fms-extensions -funsigned-char
 CFLAGS  += -D_FILE_OFFSET_BITS=64
+CFLAGS  += -D_TIME_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
 ifeq ($(CONFIG_ANDROID),yes)
 LDFLAGS += -ldl -lm
@@ -64,6 +66,10 @@ LDFLAGS += -pie
 endif
 LDFLAGS += -Wl,-z,now
 ifeq ($(CONFIG_LIBICONV),yes)
+LDFLAGS += -liconv
+endif
+ifeq ($(CONFIG_GNU_LIBICONV),yes)
+CFLAGS += -D_GNU_LIBICONV
 LDFLAGS += -liconv
 endif
 ifeq ($(PLATFORM), darwin)
@@ -92,7 +98,6 @@ ifeq ($(CONFIG_LIBAV),yes)
 FFMPEG_LIBS := \
     libavfilter \
     libswresample \
-    libavresample \
     libswscale \
     libavformat \
     libavcodec \

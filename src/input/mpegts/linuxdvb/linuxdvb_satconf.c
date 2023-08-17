@@ -531,21 +531,21 @@ const idclass_t linuxdvb_satconf_en50494_class =
     },
     {
       .type     = PT_U16,
+      .id       = "frequency",
+      .name     = N_("Frequency (MHz)"),
+      .desc     = N_("User Band Frequency (in MHz)."),
+      .get      = linuxdvb_satconf_class_en50494_freq_get,
+      .set      = linuxdvb_satconf_class_en50494_freq_set,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
       .id       = "pin",
       .name     = N_("PIN"),
       .desc     = N_("PIN."),
       .get      = linuxdvb_satconf_class_en50494_pin_get,
       .set      = linuxdvb_satconf_class_en50494_pin_set,
       .list     = linuxdvb_en50494_pin_list,
-      .opts     = PO_NOSAVE,
-    },
-    {
-      .type     = PT_U16,
-      .id       = "frequency",
-      .name     = N_("Frequency (MHz)"),
-      .desc     = N_("Frequency (in MHz)."),
-      .get      = linuxdvb_satconf_class_en50494_freq_get,
-      .set      = linuxdvb_satconf_class_en50494_freq_set,
       .opts     = PO_NOSAVE,
     },
     {
@@ -595,21 +595,21 @@ const idclass_t linuxdvb_satconf_en50607_class =
     },
     {
       .type     = PT_U16,
+      .id       = "frequency",
+      .name     = N_("Frequency (MHz)"),
+      .desc     = N_("User Band Frequency (in MHz)."),
+      .get      = linuxdvb_satconf_class_en50494_freq_get,
+      .set      = linuxdvb_satconf_class_en50494_freq_set,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
       .id       = "pin",
       .name     = N_("PIN"),
       .desc     = N_("PIN."),
       .get      = linuxdvb_satconf_class_en50494_pin_get,
       .set      = linuxdvb_satconf_class_en50494_pin_set,
       .list     = linuxdvb_en50494_pin_list,
-      .opts     = PO_NOSAVE,
-    },
-    {
-      .type     = PT_U16,
-      .id       = "frequency",
-      .name     = N_("Frequency (MHz)"),
-      .desc     = N_("Frequency (in MHz)."),
-      .get      = linuxdvb_satconf_class_en50494_freq_get,
-      .set      = linuxdvb_satconf_class_en50494_freq_set,
       .opts     = PO_NOSAVE,
     },
     {
@@ -1426,6 +1426,8 @@ linuxdvb_satconf_ele_class_en50494type_set ( void *o, const void *p )
 {
   linuxdvb_satconf_ele_t *ls  = o;
   const char             *str = p;
+  if (ls->lse_en50494 && !strcmp(str ?: "", ls->lse_en50494->ld_type))
+    return 0;
   if (ls->lse_en50494)
     linuxdvb_en50494_destroy(ls->lse_en50494);
   ls->lse_en50494 = linuxdvb_en50494_create0(str, NULL, ls, 0);

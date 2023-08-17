@@ -80,21 +80,21 @@ extern TVHCodec tvh_codec_v4l2m2m_h264;
 /* AVCodec ================================================================== */
 
 static enum AVMediaType
-codec_get_type(AVCodec *self)
+codec_get_type(const AVCodec *self)
 {
     return self->type;
 }
 
 
 static const char *
-codec_get_type_string(AVCodec *self)
+codec_get_type_string(const AVCodec *self)
 {
     return av_get_media_type_string(self->type);
 }
 
 
 const char *
-codec_get_title(AVCodec *self)
+codec_get_title(const AVCodec *self)
 {
     static __thread char codec_title[TVH_TITLE_LEN];
 
@@ -114,7 +114,7 @@ codec_get_title(AVCodec *self)
 /* TVHCodec ================================================================= */
 
 static void
-tvh_codec_video_init(TVHVideoCodec *self, AVCodec *codec)
+tvh_codec_video_init(TVHVideoCodec *self, const AVCodec *codec)
 {
     if (!self->pix_fmts) {
         self->pix_fmts = codec->pix_fmts;
@@ -122,7 +122,7 @@ tvh_codec_video_init(TVHVideoCodec *self, AVCodec *codec)
 }
 
 static void
-tvh_codec_audio_init(TVHAudioCodec *self, AVCodec *codec)
+tvh_codec_audio_init(TVHAudioCodec *self, const AVCodec *codec)
 {
     static int default_sample_rates[] = {
         44100, 48000, 96000, 192000, 0
@@ -143,7 +143,7 @@ tvh_codec_audio_init(TVHAudioCodec *self, AVCodec *codec)
 
 
 static void
-tvh_codec_init(TVHCodec *self, AVCodec *codec)
+tvh_codec_init(TVHCodec *self, const AVCodec *codec)
 {
     if (!self->profiles) {
         self->profiles = codec->profiles;
@@ -165,7 +165,7 @@ static void
 tvh_codec_register(TVHCodec *self)
 {
     static const size_t min_size = sizeof(TVHCodecProfile);
-    AVCodec *codec = NULL;
+    const AVCodec *codec = NULL;
 
     if (tvh_str_default(self->name, NULL) == NULL ||
         self->size < min_size || !self->idclass) {
@@ -222,7 +222,7 @@ tvh_codec_get_type_string(TVHCodec *self)
 }
 
 
-AVCodec *
+const AVCodec *
 tvh_codec_get_codec(TVHCodec *self)
 {
     return self->codec;

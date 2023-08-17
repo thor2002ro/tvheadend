@@ -17,7 +17,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include <sys/stat.h>
+#include <strings.h>
+#include <unistd.h>
 
 #include "settings.h"
 
@@ -187,6 +190,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_autorec_max_count = 50;
   cfg->dvr_format_tvmovies_subdir = strdup("tvmovies");
   cfg->dvr_format_tvshows_subdir = strdup("tvshows");
+  cfg->dvr_autorec_dedup = 0;
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_SYSTEM;
@@ -273,27 +277,44 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
 static void
 dvr_config_storage_check(dvr_config_t *cfg)
 {
+  char recordings_dir[] = "/var/lib/tvheadend/recordings";
+  char home_dir[PATH_MAX + sizeof("/Videos")];
+  char dvr_dir[PATH_MAX];
   char buf[PATH_MAX];
+  uid_t uid = getuid();
+  char *xdg_dir;
   struct stat st;
-  const char *homedir;
 
   if(cfg->dvr_storage != NULL && cfg->dvr_storage[0])
     return;
 
   /* Try to figure out a good place to put them videos */
+  snprintf(home_dir, sizeof(home_dir), "%s/Videos", getenv("HOME"));
+  xdg_dir = hts_settings_get_xdg_dir_with_fallback("VIDEOS", home_dir);
+  if (xdg_dir != NULL) {
+    if (stat(xdg_dir, &st) == 0) {
+      if (S_ISLNK(st.st_mode)) {
+        char xdg_dir_link[PATH_MAX - sizeof('\0')];
 
-  homedir = getenv("HOME");
-
-  if(homedir != NULL) {
-    snprintf(buf, sizeof(buf), "%s/Videos", homedir);
-    if(stat(buf, &st) == 0 && S_ISDIR(st.st_mode))
-      cfg->dvr_storage = strdup(buf);
-
-    else if(stat(homedir, &st) == 0 && S_ISDIR(st.st_mode))
-      cfg->dvr_storage = strdup(homedir);
-    else
-      cfg->dvr_storage = strdup(getcwd(buf, sizeof(buf)));
+        if (readlink(xdg_dir, xdg_dir_link, sizeof(xdg_dir_link)) == -1)
+          tvhwarn(LS_DVR, "symlink '%s' error: %s\n", xdg_dir, strerror(errno));
+        else
+          strncpy(dvr_dir, xdg_dir_link, sizeof(dvr_dir));
+      } else if (S_ISDIR(st.st_mode)) {
+        strncpy(dvr_dir, xdg_dir, sizeof(dvr_dir) - sizeof('\0'));
+      }
+    }
+    free(xdg_dir);
   }
+
+  if ((stat(recordings_dir, &st) == 0) && (st.st_uid == uid))
+    cfg->dvr_storage = strndup(recordings_dir, sizeof(recordings_dir));
+  else if((stat(dvr_dir, &st) == 0) && S_ISDIR(st.st_mode))
+      cfg->dvr_storage = strndup(dvr_dir, PATH_MAX);
+  else if(stat(home_dir, &st) == 0 && S_ISDIR(st.st_mode))
+      cfg->dvr_storage = strndup(home_dir, sizeof(home_dir));
+  else
+      cfg->dvr_storage = strdup(getcwd(buf, sizeof(buf)));
 
   tvhwarn(LS_DVR,
           "Output directory for video recording is not yet configured "
@@ -847,6 +868,7 @@ PROP_DOC(dvrconfig_whitespace)
 PROP_DOC(dvrconfig_unsafe)
 PROP_DOC(dvrconfig_windows)
 PROP_DOC(dvrconfig_fanart)
+PROP_DOC(duplicate_handling)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
@@ -1400,6 +1422,18 @@ const idclass_t dvr_config_class = {
       .desc     = N_("The maximum number of recordings that can be scheduled."),
       .off      = offsetof(dvr_config_t, dvr_autorec_max_sched_count),
       .opts     = PO_ADVANCED,
+      .group    = 6,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "record",
+      .name     = N_("Duplicate handling"),
+      .desc     = N_("Duplicate recording handling."),
+      .def.i    = DVR_AUTOREC_RECORD_ALL,
+      .doc      = prop_doc_duplicate_handling,
+      .off      = offsetof(dvr_config_t, dvr_autorec_dedup),
+      .list     = dvr_autorec_entry_class_dedup_list,
+      .opts     = PO_ADVANCED | PO_DOC_NLIST | PO_HIDDEN,
       .group    = 6,
     },
     {
